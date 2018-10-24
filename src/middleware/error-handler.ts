@@ -1,6 +1,11 @@
-import { Request, Response, NextFunction } from "express";
+import { Context } from "koa";
 
-export const handleErrors = (err, req: Request, res: Response, next: NextFunction) => {
-    console.log(`ERROR: ${err.message}`);
-    res.status(err.status).send(err.message);
+export const handleErrors = async (ctx: Context, next: Function) => {
+    try {
+        await next();
+    } catch (err) {
+        ctx.status = err.status || 500;
+        ctx.body = err.message;
+        ctx.app.emit('error', err, ctx);
+    }
 };

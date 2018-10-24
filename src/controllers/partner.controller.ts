@@ -1,47 +1,51 @@
-import {
-    BaseHttpController,
-    controller,
-    httpGet,
-    httpPost,
-    requestBody,
-    requestParam
-} from "inversify-express-utils";
-import { inject } from "inversify";
-import { PartnerService } from "../services/partner.service";
-import { IPartner } from "../shared/models";
+import {inject, injectable} from "inversify";
+import {PartnerService} from "../services/partner.service";
+import * as Router from "koa-router";
 
-@controller('/partners')
-export class PartnerController extends BaseHttpController {
+@injectable()
+export class PartnerController {
+    readonly router: Router;
 
     constructor(@inject('PartnerService') private partnerService: PartnerService) {
-        super();
+        this.router = this.setupRouter();
     }
 
-    @httpGet('/')
-    private async getPartners() {
+    private setupRouter = () => {
+        const router = new Router({ prefix: '/partners' });
+        router.get('/', this.getPartners);
+        router.get('/:id', this.getPartnerById);
+        router.post('/', this.createPartner);
+        return router;
+    };
+
+    private getPartners = async ctx => {
         try {
-            return await this.partnerService.getAllPartners();
+            ctx.body = await this.partnerService.getAllPartners();
         } catch (error) {
-            return this.badRequest('Database error!');
+            ctx.throw(400, 'Database error!');
         }
-    }
+    };
 
-    @httpGet('/:id')
-    private async getPartnerById(@requestParam('id') id: string) {
+    private  getPartnerById = async ctx => {
         try {
+            const id = ctx.params.id;
             const partner = await this.partnerService.getPartnerById(id);
-            return partner ? partner : this.notFound();
+            if (partner) {
+                ctx.body = partner;
+            } else {
+                ctx.throw(404, 'Partner not found!');
+            }
         } catch (error) {
-            return this.badRequest('Database error!');
+            ctx.throw(400, 'Database error!');
         }
-    }
+    };
 
-    @httpPost('/')
-    private async createPartner(@requestBody() partner: IPartner) {
+    private createPartner = async ctx => {
         try {
-            return await this.partnerService.createPartner(partner);
+            const partner = ctx.request.body;
+            ctx.body = await this.partnerService.createPartner(partner);
         } catch (error) {
-            return this.badRequest(error.name === 'ValidationError' ? error.message : 'Database error!');
+            ctx.throw(400, error.name === 'ValidationError' ? error.message : 'Database error!');
         }
-    }
+    };
 }

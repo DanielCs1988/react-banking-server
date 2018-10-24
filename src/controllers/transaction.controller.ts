@@ -1,47 +1,51 @@
-import {
-    BaseHttpController,
-    controller,
-    httpGet,
-    httpPost,
-    requestBody,
-    requestParam
-} from "inversify-express-utils";
-import { inject } from "inversify";
+import {inject, injectable} from "inversify";
 import { TransactionService } from "../services/transaction.service";
-import { ITransaction } from "../shared/models";
+import * as Router from "koa-router";
 
-@controller('/transactions')
-export class TransactionController extends BaseHttpController {
+@injectable()
+export class TransactionController {
+    readonly router: Router;
 
     constructor(@inject('TransactionService') private transactionService: TransactionService) {
-        super();
+        this.router = this.setupRouter();
     }
 
-    @httpGet('/')
-    private async getTransactions() {
+    private setupRouter = () => {
+        const router = new Router({ prefix: '/transactions' });
+        router.get('/', this.getTransactions);
+        router.get('/:id', this.getTransactionById);
+        router.post('/', this.createTransaction);
+        return router;
+    };
+
+    private getTransactions = async ctx => {
         try {
-            return await this.transactionService.getAllTransactions();
+            ctx.body = await this.transactionService.getAllTransactions();
         } catch (error) {
-            return this.badRequest('Database error!');
+            ctx.throw(400, 'Database error!');
         }
-    }
+    };
 
-    @httpGet('/:id')
-    private async getTransactionById(@requestParam('id') id: string) {
+    private getTransactionById = async ctx => {
         try {
+            const id = ctx.params.id;
             const transaction = await this.transactionService.getTransactionById(id);
-            return transaction ? transaction : this.notFound();
+            if (transaction) {
+                ctx.body = transaction;
+            } else {
+                ctx.throw(404, 'Transaction not found!');
+            }
         } catch (error) {
-            return this.badRequest('Database error!');
+            ctx.throw(400, 'Database error!');
         }
-    }
+    };
 
-    @httpPost('/')
-    private async createTransaction(@requestBody() transaction: ITransaction) {
+    private createTransaction = async ctx => {
         try {
-            return await this.transactionService.createTransaction(transaction);
+            const transaction = ctx.request.body;
+            ctx.body = await this.transactionService.createTransaction(transaction);
         } catch (error) {
-            return this.badRequest(error.name === 'ValidationError' ? error.message : 'Database error!');
+            ctx.throw(400, error.name === 'ValidationError' ? error.message : 'Database error!');
         }
-    }
+    };
 }
