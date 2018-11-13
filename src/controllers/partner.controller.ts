@@ -1,4 +1,4 @@
-import {inject, injectable} from "inversify";
+import {injectable} from "inversify";
 import {PartnerService} from "../services/partner.service";
 import * as Router from "koa-router";
 
@@ -6,7 +6,7 @@ import * as Router from "koa-router";
 export class PartnerController {
     readonly router: Router;
 
-    constructor(@inject('PartnerService') private partnerService: PartnerService) {
+    constructor(private partnerService: PartnerService) {
         this.router = this.setupRouter();
     }
 

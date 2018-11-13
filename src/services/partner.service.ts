@@ -1,4 +1,4 @@
-import { inject, injectable } from "inversify";
+import { injectable } from "inversify";
 import { IPartner } from "../shared/models";
 import { PartnerModel, PartnerRepository } from "../repository/partner.repository";
 import { Model } from "mongoose";
@@ -8,7 +8,7 @@ import { pick } from 'lodash';
 export class PartnerService {
     private readonly partnerRepository: Model<PartnerModel>;
 
-    constructor(@inject('PartnerRepository') partnerRepository: PartnerRepository) {
+    constructor(partnerRepository: PartnerRepository) {
         this.partnerRepository = partnerRepository.Model;
     }
 

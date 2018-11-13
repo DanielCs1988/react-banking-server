@@ -1,4 +1,4 @@
-import {inject, injectable} from "inversify";
+import {injectable} from "inversify";
 import { TransactionService } from "../services/transaction.service";
 import * as Router from "koa-router";
 
@@ -6,7 +6,7 @@ import * as Router from "koa-router";
 export class TransactionController {
     readonly router: Router;
 
-    constructor(@inject('TransactionService') private transactionService: TransactionService) {
+    constructor(private transactionService: TransactionService) {
         this.router = this.setupRouter();
     }
 

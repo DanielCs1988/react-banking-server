@@ -1,4 +1,4 @@
-import { inject, injectable } from "inversify";
+import { injectable } from "inversify";
 import { ITransaction } from "../shared/models";
 import { TransactionModel, TransactionRepository } from "../repository/transaction.repository";
 import { Model } from "mongoose";
@@ -8,7 +8,7 @@ import { pick } from 'lodash';
 export class TransactionService {
     private readonly transactionRepository: Model<TransactionModel>;
 
-    constructor(@inject('TransactionRepository') transactionRepository: TransactionRepository) {
+    constructor(transactionRepository: TransactionRepository) {
         this.transactionRepository = transactionRepository.Model;
     }
 
